@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>USDT Balance Verifier</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    #connectBtn, #disconnectBtn, #refreshBtn {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+
+    #walletInfo {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    #connectedAddress {
+      font-weight: bold;
+    }
+
+    .network-card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: 10px;
+      flex: 1;
+    }
+
+    .network-card.success {
+      border: 2px solid green;
+    }
+
+    .network-card.error {
+      border: 2px solid red;
+    }
+
+    #networksGrid {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .network-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .balance-amount {
+      font-size: 1.2em;
+      margin-top: 5px;
+    }
+
+    .balance-status {
+      font-size: 0.9em;
+      color: gray;
+    }
+
+    .balance-status.success {
+      color: green;
+    }
+
+    .balance-amount.success {
+      color: green;
+    }
+
+    #verificationResult {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 1.2em;
+    }
+
+    .verification-result.verified {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .verification-result.not-verified {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    #loadingIndicator {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    #errorMessage {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .error-content a {
+      color: #0056b3;
+      text-decoration: none;
+    }
+
+    .error-content button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>USDT Balance Verifier</h1>
+  
+  <button id="connectBtn">Connect Wallet</button>
+  
+  <div id="walletInfo" style="display:none;">
+    <div>Connected: <span id="connectedAddress"></span></div>
+    <button id="disconnectBtn">Disconnect</button>
+  </div>
+  
+  <div id="verificationSection" style="display:none;">
+    <div id="networksGrid"></div>
+    <div id="verificationResult" class="verification-result" style="display:none;"></div>
+    <button id="refreshBtn">Refresh</button>
+  </div>
+  
+  <div id="loadingIndicator" style="display:none;">Loading...</div>
+  
+  <div id="errorMessage" style="display:none;">
+    <div id="errorText"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script>
+    // Your entire long script goes here (exactly the full JS code you posted above)
+  </script>
+
+</body>
+</html>
